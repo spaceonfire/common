@@ -5,19 +5,18 @@ declare(strict_types=1);
 namespace spaceonfire\Common\Kernel;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use spaceonfire\Container\CompositeContainer;
+use spaceonfire\Container\DefinitionContainer;
+use spaceonfire\Container\FactoryContainer;
 use spaceonfire\Container\RawValueHolder;
 use spaceonfire\Container\ServiceProvider\AbstractServiceProvider;
 
 class KernelTest extends TestCase
 {
-    private function factory(bool $debugModeEnabled = false): AbstractKernel
+    private function factory(?ContainerInterface $container = null, bool $debugModeEnabled = false): AbstractKernel
     {
-        return new class($debugModeEnabled) extends AbstractKernel {
-            public function __construct(bool $debugModeEnabled = false)
-            {
-                parent::__construct(null, $debugModeEnabled);
-            }
-
+        return new class($container, $debugModeEnabled) extends AbstractKernel {
             protected function loadServiceProviders(): iterable
             {
                 return [
@@ -31,7 +30,7 @@ class KernelTest extends TestCase
 
                         public function register(): void
                         {
-                            $this->getContainer()->add('foo', new RawValueHolder('bar'));
+                            $this->getContainer()->define('foo', new RawValueHolder('bar'));
                         }
                     }
                 ];
@@ -41,16 +40,18 @@ class KernelTest extends TestCase
 
     public function testIsDebugModeEnabled(): void
     {
-        $nonDebugKernel = $this->factory(false);
+        $nonDebugKernel = $this->factory();
         self::assertFalse($nonDebugKernel->isDebugModeEnabled());
 
-        $debugKernel = $this->factory(true);
+        $debugKernel = $this->factory(null, true);
         self::assertTrue($debugKernel->isDebugModeEnabled());
     }
 
     public function testDependenciesRegisteredInContainer(): void
     {
-        $kernel = $this->factory();
+        $kernel = $this->factory(
+            new CompositeContainer(new DefinitionContainer(), new FactoryContainer())
+        );
 
         self::assertSame($kernel, $kernel->getContainer()->get('kernel'));
         self::assertSame($kernel, $kernel->getContainer()->get(get_class($kernel)));

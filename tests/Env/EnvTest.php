@@ -16,6 +16,8 @@ class EnvTest extends TestCase
      */
     public function testEnv(string $name, $default, $expected): void
     {
+        \defined('SOF_ENV_PATH') or \define('SOF_ENV_PATH', __DIR__ . '/../Fixtures');
+        \defined('SOF_ENV_FILE_NAME') or \define('SOF_ENV_FILE_NAME', 'test.env');
         self::assertSame($expected, env($name, $default));
     }
 
@@ -26,9 +28,7 @@ class EnvTest extends TestCase
             ['BAZ', null, null],
             [
                 'BAZ',
-                function () {
-                    return 'baz';
-                },
+                fn () => 'baz',
                 'baz',
             ],
             ['TRUE', null, true],

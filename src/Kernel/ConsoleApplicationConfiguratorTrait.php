@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace spaceonfire\Common\Kernel;
 
-use spaceonfire\Container\ContainerInterface;
-use spaceonfire\Container\Definition\DefinitionTag;
+use Psr\Container\ContainerInterface;
+use spaceonfire\Container\DefinitionAggregateInterface;
+use spaceonfire\Container\Factory\DefinitionTag;
+use spaceonfire\Container\FactoryAggregateInterface;
+use spaceonfire\Container\InvokerInterface;
+use spaceonfire\Container\ServiceProviderAggregateInterface;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -25,7 +29,7 @@ trait ConsoleApplicationConfiguratorTrait
     ): void {
         if (\PHP_SAPI !== 'cli') {
             // @codeCoverageIgnoreStart
-            trigger_error(sprintf(
+            \trigger_error(\sprintf(
                 'Method %s::configureConsoleApplication() called in not CLI environment.',
                 static::class
             ));
@@ -34,8 +38,8 @@ trait ConsoleApplicationConfiguratorTrait
         }
 
         // Register console I/O in container first. It can be used as nested dependencies of some command (logger for example)
-        $this->getContainer()->share(InputInterface::class, $input);
-        $this->getContainer()->share(OutputInterface::class, $output);
+        $this->getContainer()->define(InputInterface::class, $input, true);
+        $this->getContainer()->define(OutputInterface::class, $output, true);
 
         $this->determineDebugModeFromConsoleInput($input);
 
@@ -48,6 +52,7 @@ trait ConsoleApplicationConfiguratorTrait
 
     /**
      * @noinspection AccessModifierPresentedInspection
+     * @phpstan-return ContainerInterface&ServiceProviderAggregateInterface&DefinitionAggregateInterface&FactoryAggregateInterface&InvokerInterface
      */
     abstract function getContainer(): ContainerInterface;
 
@@ -64,7 +69,7 @@ trait ConsoleApplicationConfiguratorTrait
             return;
         }
 
-        // Verbosity level set to 3+
+        // Verbosity level set to 3
         if ($input->hasParameterOption('-vvv', true)) {
             $this->enableDebugMode(true);
             return;

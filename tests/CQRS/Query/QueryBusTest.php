@@ -4,24 +4,30 @@ declare(strict_types=1);
 
 namespace spaceonfire\Common\CQRS\Query;
 
-use Psr\Container\ContainerInterface;
-use spaceonfire\Common\_Fixtures\CQRS\Query\FixtureQuery;
-use spaceonfire\Common\_Fixtures\CQRS\Query\FixtureQueryBus;
-use spaceonfire\Common\_Fixtures\CQRS\Query\FixtureQueryHandler;
-use spaceonfire\Common\_Fixtures\CQRS\Query\FixtureQueryResponse;
-use spaceonfire\Common\AbstractTestCase;
+use PHPUnit\Framework\TestCase;
+use spaceonfire\Common\Fixtures\CQRS\Query\FixtureQuery;
+use spaceonfire\Common\Fixtures\CQRS\Query\FixtureQueryBus;
+use spaceonfire\Common\Fixtures\CQRS\Query\FixtureQueryHandler;
+use spaceonfire\Common\Fixtures\CQRS\Query\FixtureQueryResponse;
+use spaceonfire\Container\FactoryInterface;
+use spaceonfire\Container\FactoryOptionsInterface;
+use spaceonfire\Container\Fixtures\ArrayFactoryAggregate;
 
-class QueryBusTest extends AbstractTestCase
+/**
+ * @todo: replace ArrayFactoryAggregate
+ */
+class QueryBusTest extends TestCase
 {
     public function testAsk(): void
     {
-        $queryHandler = new FixtureQueryHandler();
-
-        $containerProphecy = $this->prophesize(ContainerInterface::class);
-        $containerProphecy->has(FixtureQueryHandler::class)->willReturn(true);
-        $containerProphecy->get(FixtureQueryHandler::class)->willReturn($queryHandler);
-
-        $queryBus = new FixtureQueryBus($containerProphecy->reveal());
+        $queryBus = new FixtureQueryBus(new ArrayFactoryAggregate([
+            FixtureQueryHandler::class => new class implements FactoryInterface {
+                public function make(?FactoryOptionsInterface $options = null)
+                {
+                    return new FixtureQueryHandler();
+                }
+            },
+        ]));
 
         $queryResponse = $queryBus->ask(new FixtureQuery());
 
@@ -30,12 +36,14 @@ class QueryBusTest extends AbstractTestCase
 
     public function testAskWithNoResponse(): void
     {
-        $containerProphecy = $this->prophesize(ContainerInterface::class);
-        $containerProphecy->has(FixtureQueryHandler::class)->shouldBeCalled()->willReturn(true);
-        $containerProphecy->get(FixtureQueryHandler::class)->shouldBeCalled()->willReturn(static function (): void {
-        });
-
-        $queryBus = new FixtureQueryBus($containerProphecy->reveal());
+        $queryBus = new FixtureQueryBus(new ArrayFactoryAggregate([
+            FixtureQueryHandler::class => new class implements FactoryInterface {
+                public function make(?FactoryOptionsInterface $options = null)
+                {
+                    return new FixtureQueryHandler(true);
+                }
+            },
+        ]));
 
         $queryResponse = $queryBus->ask(new FixtureQuery());
 

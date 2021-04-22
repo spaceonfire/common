@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace spaceonfire\Common\Kernel;
 
 use PHPUnit\Framework\TestCase;
-use spaceonfire\Container\Definition\DefinitionTag;
+use spaceonfire\Container\Factory\DefinitionTag;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -37,7 +37,7 @@ class ConsoleApplicationConfiguratorKernelTest extends TestCase
 
         $command = new Command('foo');
 
-        $kernel->getContainer()->add('foo', $command)->addTag(DefinitionTag::CONSOLE_COMMAND);
+        $kernel->getContainer()->define('foo', $command)->addTag(DefinitionTag::CONSOLE_COMMAND);
 
         $application = new Application();
         $input = new ArrayInput([]);

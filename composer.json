@@ -1,7 +1,7 @@
 {
   "name": "spaceonfire/common",
-  "type": "library",
   "description": "Application kernel based on DI container and CQRS buses",
+  "type": "library",
   "keywords": [
     "kernel",
     "env",
@@ -21,23 +21,28 @@
     }
   ],
   "require": {
-    "php": "^7.2|^8.0"
+    "php": "^7.4|^8.0",
+    "spaceonfire/exception": "^3.0",
+    "symfony/polyfill-php80": "^1.22"
   },
   "require-dev": {
+    "phpunit/phpunit": "^9.5",
     "psr/log": "^1.1",
     "roave/security-advisories": "dev-latest",
-    "spaceonfire/command-bus": "^2.5",
-    "spaceonfire/container": "^2.5",
-    "symfony/console": "^5.1",
-    "symfony/polyfill-php80": "^1.22",
-    "symfony/stopwatch": "^5.1",
-    "vlucas/phpdotenv": "^4.1|^5.2"
+    "spaceonfire/command-bus": "^3.0",
+    "spaceonfire/container": "^3.0",
+    "symfony/console": "^5.2",
+    "symfony/property-access": "^5.2",
+    "symfony/property-info": "^5.2",
+    "vlucas/phpdotenv": "^5.2",
+    "yiisoft/arrays": "^1.0"
   },
   "suggest": {
     "vlucas/phpdotenv": "Required for env() function",
     "spaceonfire/command-bus": "Used to organize CQRS buses",
     "spaceonfire/container": "Used to organize Kernel",
-    "symfony/polyfill-php80": "^1.22"
+    "symfony/property-access": "^5.2",
+    "yiisoft/arrays": "^1.0"
   },
   "autoload": {
     "psr-4": {
@@ -50,11 +55,6 @@
   "autoload-dev": {
     "psr-4": {
       "spaceonfire\\Common\\": "tests"
-    }
-  },
-  "extra": {
-    "branch-alias": {
-      "dev-master": "2.5-dev"
     }
   },
   "config": {

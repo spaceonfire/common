@@ -4,23 +4,38 @@ declare(strict_types=1);
 
 namespace spaceonfire\Common\CQRS\Command;
 
-use Psr\Container\ContainerInterface;
-use spaceonfire\Common\_Fixtures\CQRS\Command\FixtureCommand;
-use spaceonfire\Common\_Fixtures\CQRS\Command\FixtureCommandBus;
-use spaceonfire\Common\_Fixtures\CQRS\Command\FixtureCommandHandler;
-use spaceonfire\Common\AbstractTestCase;
+use PHPUnit\Framework\TestCase;
+use spaceonfire\Common\Fixtures\CQRS\Command\FixtureCommand;
+use spaceonfire\Common\Fixtures\CQRS\Command\FixtureCommandBus;
+use spaceonfire\Common\Fixtures\CQRS\Command\FixtureCommandHandler;
+use spaceonfire\Container\FactoryInterface;
+use spaceonfire\Container\FactoryOptionsInterface;
+use spaceonfire\Container\Fixtures\ArrayFactoryAggregate;
 
-class CommandBusTest extends AbstractTestCase
+/**
+ * @todo: replace ArrayFactoryAggregate
+ */
+class CommandBusTest extends TestCase
 {
     public function testDispatch(): void
     {
         $commandHandler = new FixtureCommandHandler();
 
-        $containerProphecy = $this->prophesize(ContainerInterface::class);
-        $containerProphecy->has(FixtureCommandHandler::class)->willReturn(true);
-        $containerProphecy->get(FixtureCommandHandler::class)->willReturn($commandHandler);
+        $commandBus = new FixtureCommandBus(new ArrayFactoryAggregate([
+            FixtureCommandHandler::class => new class($commandHandler) implements FactoryInterface {
+                private FixtureCommandHandler $object;
 
-        $commandBus = new FixtureCommandBus($containerProphecy->reveal());
+                public function __construct(FixtureCommandHandler $object)
+                {
+                    $this->object = $object;
+                }
+
+                public function make(?FactoryOptionsInterface $options = null)
+                {
+                    return $this->object;
+                }
+            },
+        ]));
 
         $command = new FixtureCommand();
         $commandBus->dispatch($command);

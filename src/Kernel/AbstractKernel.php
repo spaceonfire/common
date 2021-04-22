@@ -4,51 +4,43 @@ declare(strict_types=1);
 
 namespace spaceonfire\Common\Kernel;
 
-use Psr\Container\ContainerInterface as PsrContainerInterface;
+use Psr\Container\ContainerInterface;
 use spaceonfire\Container\CompositeContainer;
-use spaceonfire\Container\Container;
-use spaceonfire\Container\ContainerInterface;
-use spaceonfire\Container\ContainerWithServiceProvidersInterface;
-use spaceonfire\Container\ReflectionContainer;
+use spaceonfire\Container\DefinitionAggregateInterface;
+use spaceonfire\Container\DefinitionContainer;
+use spaceonfire\Container\Factory\Reflection\ReflectionFactoryAggregate;
+use spaceonfire\Container\Factory\Reflection\ReflectionInvoker;
+use spaceonfire\Container\FactoryAggregateInterface;
+use spaceonfire\Container\FactoryContainer;
+use spaceonfire\Container\InvokerInterface;
 use spaceonfire\Container\ServiceProvider\ServiceProviderInterface;
+use spaceonfire\Container\ServiceProviderAggregateInterface;
 
 abstract class AbstractKernel
 {
     /**
-     * @var ContainerInterface
+     * @var ContainerInterface&ServiceProviderAggregateInterface&DefinitionAggregateInterface&FactoryAggregateInterface&InvokerInterface
      */
-    protected $container;
+    protected ContainerInterface $container;
+
+    protected bool $debugModeEnabled;
 
     /**
-     * @var bool
-     */
-    protected $debugModeEnabled;
-
-    /**
-     * AbstractKernel constructor.
-     * @param ContainerWithServiceProvidersInterface|null $container
+     * @param ContainerInterface|null $container
      * @param bool $debugModeEnabled
      */
     public function __construct(
-        ?ContainerWithServiceProvidersInterface $container = null,
+        ?ContainerInterface $container = null,
         bool $debugModeEnabled = false
     ) {
-        if (null === $container) {
-            $container = new CompositeContainer([
-                50 => new Container(),
-                100 => new ReflectionContainer(),
-            ]);
-        }
-
-        $this->container = $container;
+        $this->container = $this->prepareContainer($container);
         $this->debugModeEnabled = $debugModeEnabled;
 
-        $this->container->add(PsrContainerInterface::class, ContainerInterface::class);
-        $this->container->add(ContainerInterface::class, [$this, 'getContainer']);
+        $this->container->define(ContainerInterface::class, [$this, 'getContainer']);
 
-        $this->container->add('kernel', static::class);
-        $this->container->share(static::class, $this);
-        $this->container->add('kernel.debug', [$this, 'isDebugModeEnabled']);
+        $this->container->define('kernel', static::class);
+        $this->container->define(static::class, $this, true);
+        $this->container->define('kernel.debug', [$this, 'isDebugModeEnabled']);
 
         foreach ($this->loadServiceProviders() as $serviceProvider) {
             $this->container->addServiceProvider($serviceProvider);
@@ -57,7 +49,7 @@ abstract class AbstractKernel
 
     /**
      * Returns the container.
-     * @return ContainerInterface
+     * @return ContainerInterface&ServiceProviderAggregateInterface&DefinitionAggregateInterface&FactoryAggregateInterface&InvokerInterface
      */
     public function getContainer(): ContainerInterface
     {
@@ -79,10 +71,35 @@ abstract class AbstractKernel
     }
 
     /**
-     * @return string[]|ServiceProviderInterface[]
+     * @return iterable<ServiceProviderInterface|class-string<ServiceProviderInterface>>
      */
     protected function loadServiceProviders(): iterable
     {
         return [];
+    }
+
+    /**
+     * @param ContainerInterface|null $container
+     * @return ContainerInterface&ServiceProviderAggregateInterface&DefinitionAggregateInterface&FactoryAggregateInterface&InvokerInterface
+     */
+    private function prepareContainer(?ContainerInterface $container): ContainerInterface
+    {
+        if (
+            $container instanceof ServiceProviderAggregateInterface &&
+            $container instanceof DefinitionAggregateInterface &&
+            $container instanceof FactoryAggregateInterface &&
+            $container instanceof InvokerInterface
+        ) {
+            return $container;
+        }
+
+        $factory = new ReflectionFactoryAggregate();
+        $invoker = new ReflectionInvoker();
+        $definitionContainer = new DefinitionContainer($factory, $invoker);
+        $factoryContainer = new FactoryContainer($factory, $invoker);
+
+        return null === $container
+            ? new CompositeContainer($definitionContainer, $factoryContainer)
+            : new CompositeContainer($container, $definitionContainer, $factoryContainer);
     }
 }

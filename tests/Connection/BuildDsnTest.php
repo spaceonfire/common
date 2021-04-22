@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace spaceonfire\Common\Connection;
 
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class BuildDsnTest extends TestCase
@@ -98,7 +97,7 @@ class BuildDsnTest extends TestCase
 
     public function testBuildDsnException(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         buildDsn([], 'unknown');
     }
 }

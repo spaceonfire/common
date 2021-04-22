@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace spaceonfire\Common\_Fixtures\CQRS\Query;
+namespace spaceonfire\Common\Fixtures\CQRS\Query;
 
 use spaceonfire\Common\CQRS\Query\QueryInterface;
 

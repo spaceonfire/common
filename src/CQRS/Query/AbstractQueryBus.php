@@ -8,19 +8,13 @@ use spaceonfire\CommandBus\CommandBus as MessageBus;
 
 abstract class AbstractQueryBus implements QueryBusInterface
 {
-    /**
-     * @var MessageBus
-     */
-    private $bus;
+    private MessageBus $bus;
 
     public function __construct(MessageBus $bus)
     {
         $this->bus = $bus;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function ask(QueryInterface $query): ?ResponseInterface
     {
         return $this->bus->handle($query);

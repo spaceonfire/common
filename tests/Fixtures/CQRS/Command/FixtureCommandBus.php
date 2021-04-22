@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace spaceonfire\Common\_Fixtures\CQRS\Command;
+namespace spaceonfire\Common\Fixtures\CQRS\Command;
 
-use Psr\Container\ContainerInterface;
 use spaceonfire\CommandBus\CommandBus as MessageBus;
 use spaceonfire\CommandBus\Mapping\ClassName\SuffixClassNameMapping;
 use spaceonfire\CommandBus\Mapping\CompositeMapping;
 use spaceonfire\CommandBus\Mapping\Method\StaticMethodNameMapping;
 use spaceonfire\Common\CQRS\Command\AbstractCommandBus;
+use spaceonfire\Container\FactoryAggregateInterface;
 
 final class FixtureCommandBus extends AbstractCommandBus
 {
-    public function __construct(ContainerInterface $container)
+    public function __construct(FactoryAggregateInterface $factory)
     {
         parent::__construct(
             new MessageBus(
@@ -22,7 +22,7 @@ final class FixtureCommandBus extends AbstractCommandBus
                     new StaticMethodNameMapping('__invoke')
                 ),
                 [],
-                $container
+                $factory
             )
         );
     }

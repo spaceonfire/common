@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace spaceonfire\Common\Connection;
 
-use InvalidArgumentException;
-use Webmozart\Assert\Assert;
-
 /**
  * Composes Data Source Name (DSN) from given options
  * @see https://www.php.net/manual/ru/ref.pdo-mysql.connection.php
@@ -20,9 +17,9 @@ use Webmozart\Assert\Assert;
  */
 function buildDsn(array $options, string $driver = 'mysql'): string
 {
-    if (in_array($driver, ['sqlite', 'sqlite2'], true)) {
-        Assert::count($options, 1);
-        return $driver . ':' . array_values($options)[0];
+    if (\in_array($driver, ['sqlite', 'sqlite2'], true)) {
+        \assert(1 === \count($options));
+        return $driver . ':' . \array_values($options)[0];
     }
 
     $optionsOrderMap = [
@@ -63,12 +60,14 @@ function buildDsn(array $options, string $driver = 'mysql'): string
     ];
 
     if (!isset($optionsOrderMap[$driver])) {
-        throw new InvalidArgumentException('Unknown DSN driver: ' . $driver);
+        throw new \InvalidArgumentException(\sprintf('Unknown DSN driver: %s', $driver));
     }
 
     $optionsByOrder = $optionsOrderMap[$driver];
 
     $optionsFiltered = [];
+
+    // TODO: support additional options
 
     foreach ($optionsByOrder as $optionName) {
         if (!isset($options[$optionName]) || empty($options[$optionName])) {
@@ -78,12 +77,10 @@ function buildDsn(array $options, string $driver = 'mysql'): string
         $optionsFiltered[$optionName] = $options[$optionName];
     }
 
-    $optionsString = implode(';', array_map(
-        static function ($v, $k) {
-            return sprintf('%s=%s', $k, $v);
-        },
-        array_values($optionsFiltered),
-        array_keys($optionsFiltered)
+    $optionsString = \implode(';', \array_map(
+        static fn ($v, $k) => $k . '=' . $v,
+        \array_values($optionsFiltered),
+        \array_keys($optionsFiltered)
     ));
 
     return $driver . ':' . $optionsString;
